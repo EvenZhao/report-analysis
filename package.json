@@ -4,7 +4,7 @@
 	"description": "report-analysis",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"start": "nodemon ./index.js"
 	},
 	"repository": {
 		"type": "git",
@@ -25,10 +25,10 @@
 		"@commitlint/config-conventional": "^8.1.0",
 		"eslint": "^6.1.0",
 		"eslint-config-airbnb-base": "^14.0.0",
-		"eslint-import-resolver-alias": "^1.1.2",
 		"eslint-plugin-import": "^2.18.2",
 		"husky": "^3.0.4",
-		"lint-staged": "^9.2.5"
+		"lint-staged": "^9.2.5",
+		"nodemon": "^1.19.1"
 	},
 	"husky": {
 		"hooks": {
@@ -41,5 +41,8 @@
 			"eslint --fix",
 			"git add"
 		]
+	},
+	"dependencies": {
+		"koa": "^2.8.1"
 	}
 }
