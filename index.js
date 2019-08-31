@@ -9,30 +9,46 @@ app.listen(8080, () => {
 });
 
 app.use(async (ctx, next) => {
-	http.get('http://quotes.money.163.com/stocksearch/json.do?type=&count=5&word=600519', (res) => {
-		res.setEncoding('utf8');
-		let rawData = '';
-		res.on('data', (chunk) => { rawData += chunk; });
-		res.on('end', () => {
-			try {
-				const index = rawData.indexOf('(');
-				rawData = rawData.substring(index + 1, rawData.length - 1);
-				rawData = JSON.parse(rawData);
-			} catch (e) {
-				console.error(e.message);
-			}
-		});
-	});
 	await next();
 });
 
-app.use(async (ctx) => {
-	console.log(ctx.request);
+app.use(async (ctx, next) => {
 	const { request } = ctx;
 	if (request.url === '/' && request.method === 'GET') {
-		ctx.response.set('Content-Type', 'text/html');
+		ctx.set({ 'Content-Type': 'text/html' });
 		ctx.response.body = fs.readFileSync('./src/views/index.html');
 	} else if (request.url === '/' && request.method === 'POST') {
 		ctx.response.status = 400;
+	} else if (request.url.includes('getStock') && request.method === 'GET') {
+		let params = request.url;
+		params = params.substring(params.indexOf('?') + 1);
+		const arr = params.split('&');
+		params = {};
+		arr.forEach(item => {
+			const _arr = item.split('=');
+			/* eslint-disable */
+			params[_arr[0]] = _arr[1];
+			/* eslint-enable */
+		});
+		await new Promise((resolve, reject) => {
+			http.get(`http://quotes.money.163.com/stocksearch/json.do?type=&count=5&word=${params.word}`, (res) => {
+				res.setEncoding('utf8');
+				let rawData = '';
+				res.on('data', (chunk) => { rawData += chunk; });
+				res.on('end', async () => {
+					try {
+						const index = rawData.indexOf('(');
+						rawData = rawData.substring(index + 1, rawData.length - 1);
+						rawData = JSON.parse(rawData);
+						ctx.body = rawData;
+						resolve();
+					} catch (e) {
+						console.error(e.message);
+						reject();
+					}
+				});
+			});
+		});
 	}
+	await next();
 });
