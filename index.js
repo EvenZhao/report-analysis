@@ -19,6 +19,9 @@ app.use(async (ctx, next) => {
 		ctx.response.body = fs.readFileSync('./src/views/index.html');
 	} else if (request.url === '/' && request.method === 'POST') {
 		ctx.response.status = 400;
+	} else if (request.url === '/src/views/index.jsx' && request.method === 'GET') {
+		ctx.set({ 'Content-Type': 'application/x-javascript' });
+		ctx.response.body = fs.readFileSync('./src/views/index.jsx');
 	} else if (request.url.includes('getStock') && request.method === 'GET') {
 		let params = request.url;
 		params = params.substring(params.indexOf('?') + 1);
