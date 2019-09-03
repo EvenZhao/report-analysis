@@ -43,6 +43,8 @@
 		]
 	},
 	"dependencies": {
+		"cheerio": "^1.0.0-rc.3",
+		"echarts-for-react": "^2.0.15-beta.0",
 		"koa": "^2.8.1",
 		"react": "^16.9.0"
 	}
