@@ -46,6 +46,9 @@
 		"cheerio": "^1.0.0-rc.3",
 		"echarts-for-react": "^2.0.15-beta.0",
 		"koa": "^2.8.1",
+		"koa-bodyparser": "^4.2.1",
+		"koa-router": "^7.4.0",
+		"koa-static": "^5.0.0",
 		"react": "^16.9.0"
 	}
 }

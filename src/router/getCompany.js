@@ -2,7 +2,7 @@ const cheerio = require('cheerio');
 const http = require('http');
 
 module.exports = (ctx) => new Promise((resolve, reject) => {
-	http.get(`http://quotes.money.163.com/f10/zycwzb_${ctx.params.word},year.html`, (res) => {
+	http.get(`http://quotes.money.163.com/f10/zycwzb_${ctx.query.word},year.html`, (res) => {
 		res.setEncoding('utf8');
 		let rawData = '';
 		res.on('data', (chunk) => { rawData += chunk; });

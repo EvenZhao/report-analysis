@@ -42,7 +42,7 @@ class Input extends React.Component {
 					}
 				}
 			};
-			xhr.open('get', `http://localhost:8080/getStock?word=${this.state.value}`, true);
+			xhr.open('get', `http://localhost:8080/api/getStock?word=${this.state.value}`, true);
 			xhr.send(null);
 		}
 	}
@@ -102,7 +102,7 @@ class Input extends React.Component {
 				}
 			}
 		};
-		xhr.open('get', `http://localhost:8080/getCompany?word=${symbol}`, true);
+		xhr.open('get', `http://localhost:8080/api/getCompany?word=${symbol}`, true);
 		xhr.send(null);
 
 	}

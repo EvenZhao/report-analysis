@@ -1,7 +1,7 @@
 const http = require('http');
 
 module.exports = (ctx) => new Promise((resolve, reject) => {
-	http.get(`http://quotes.money.163.com/stocksearch/json.do?type=&count=5&word=${ctx.params.word}`, (res) => {
+	http.get(`http://quotes.money.163.com/stocksearch/json.do?type=&count=5&word=${ctx.query.word}`, (res) => {
 		res.setEncoding('utf8');
 		let rawData = '';
 		res.on('data', (chunk) => { rawData += chunk; });
