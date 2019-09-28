@@ -1,5 +1,7 @@
 const cheerio = require('cheerio');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 
 const require1 = (ctx) => new Promise((resolve, reject) => {
@@ -139,39 +141,49 @@ const require3 = (ctx) => new Promise((resolve, reject) => {
 	});
 });
 
-module.exports = (ctx) => Promise.all([require1(ctx), require2(ctx), require3(ctx)]).then(value => {
-	const xjdjw = [];
-	const yxfz = [];
-	const yingsk = [];
-	const {
-		hbzj, yspj, cqjk, dqjk, cqysk, qtysk, ch, ysk, yfk, time,
-	} = value[1];
-	const { yysr, lxzc, jlr } = value[2];
-	try {
-		hbzj.forEach((ele, i) => {
-			xjdjw.push(Number(ele) + Number(yspj[i]));
-			yxfz.push(Number(cqjk[i]) + Number(dqjk[i]));
-			yingsk.push(Number(cqysk[i]) + Number(qtysk[i]));
-		});
-	} catch (err) {
-		ctx.status = 500;
-		console.log('第三方数据错误', err);
-		return;
+module.exports = (ctx) => {
+	if (fs.existsSync(path.join(__dirname, `../views/${ctx.query.word}.json`))) {
+		ctx.body = fs.readFileSync(path.join(__dirname, `../views/${ctx.query.word}.json`), 'utf8');
+		console.log(9999);
+		return null;
 	}
-	const data = {
-		xjdjw,
-		yxfz,
-		lxzc,
-		ch,
-		yysr,
-		jlr,
-		yingsk,
-		ysk,
-		yfk,
-		time,
-	};
-	ctx.body = data;
-});
+	return Promise.all([require1(ctx), require2(ctx), require3(ctx)]).then(value => {
+		console.log(888);
+
+		const xjdjw = [];
+		const yxfz = [];
+		const yingsk = [];
+		const {
+			hbzj, yspj, cqjk, dqjk, cqysk, qtysk, ch, ysk, yfk, time,
+		} = value[1];
+		const { yysr, lxzc, jlr } = value[2];
+		try {
+			hbzj.forEach((ele, i) => {
+				xjdjw.push(Number(ele) + Number(yspj[i]));
+				yxfz.push(Number(cqjk[i]) + Number(dqjk[i]));
+				yingsk.push(Number(cqysk[i]) + Number(qtysk[i]));
+			});
+		} catch (err) {
+			ctx.status = 500;
+			console.log('第三方数据错误', err);
+			return;
+		}
+		const data = {
+			xjdjw,
+			yxfz,
+			lxzc,
+			ch,
+			yysr,
+			jlr,
+			yingsk,
+			ysk,
+			yfk,
+			time,
+		};
+		fs.writeFileSync(path.join(__dirname, `../views/${ctx.query.word}.json`), JSON.stringify(data));
+		ctx.body = data;
+	});
+};
 // .then(() => {
 
 // });
