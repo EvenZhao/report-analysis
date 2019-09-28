@@ -1,132 +1,255 @@
+// const debounce = (fn, time) => {
+// 	let debounceTimer = null;
+// 	let enableQuery = true;
+// 	return function () {
+// 		if (!enableQuery) return;
+// 		enableQuery = false;
+// 		if (!debounceTimer) {
+// 			debounceTimer = setTimeout(() => {
+// 				enableQuery = true;
+// 				clearTimeout(debounceTimer);
+// 				debounceTimer = null;
+// 			}, time);
+// 			fn.apply(null, arguments);
+// 		}
+// 	};
+// };
+
+
 class Input extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			value: '',
 			list: [],
-		}
+			index: null
+		};
+		this.myChart = null;
+		this.myChart2= null;
+		this.myChart3 = null;
 	}
-	handleBlur() {
-		if (this.state.value.trim() === '') {
-			this.setState({ list: [] });
-		} else {
-			function createXHR() {
-				if (typeof XMLHttpRequest != "undefined") {
-					return new XMLHttpRequest();
-				} else if (typeof ActiveXObject != "undefined") {
-					if (typeof arguments.callee.activeXString != "string") {
-						var versions = ["MSXML2.XMLHttp.6.0", "MSXML2.XMLHttp.3.0", "MSXML2.XMLHttp"], i, len;
-						for (i = 0, len = versions.length; i < len; i++) {
-							try {
-								new ActiveXObject(versions[i]);
-								arguments.callee.activeXString = versions[i];
-								break;
-							} catch (ex) {
-								//跳过
+
+	componentWillUnmount() {
+		clearTimeout(this.debounceTimer);
+		this.debounceTimer = null;
+	}
+
+	handleChange(e) {
+		this.myChart && this.myChart.dispose();
+		this.myChart2 && this.myChart2.dispose();
+		this.myChart3 && this.myChart3.dispose();
+		this.setState({ index: null });
+		const { value } = e.target;
+		this.setState({ value }, () => {
+			axios.get(`http://localhost:8080/api/getStock?word=${value}`)
+				.then((response) => {
+					this.setState({ list: response.data });
+				});
+		});
+		this.setState({})
+	}
+
+	handleClick(index) {
+		this.setState({ index: index });
+		const symbol = this.state.list[index].symbol;
+		axios.get(`http://localhost:8080/api/getCompany?word=${symbol}`)
+			.then((response) => {
+				const resDatas = response.data;
+				this.myChart = echarts.init(document.getElementById('chart'));
+				this.myChart2 = echarts.init(document.getElementById('chart2'));
+				this.myChart3 = echarts.init(document.getElementById('chart3'));
+
+				// 现金等价物，有息负债
+				const option = {
+					tooltip: {
+						trigger: 'axis',
+						axisPointer: {
+							type: 'cross',
+							crossStyle: {
+								color: '#999'
 							}
 						}
-					}
-					return new ActiveXObject(arguments.callee.activeXString);
-				} else {
-					throw new Error("No XHR object available.");
-				}
-			}
-			var xhr = createXHR();
-			xhr.onreadystatechange = () => {
-				if (xhr.readyState == 4) {
-					if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
-						const value = JSON.parse(xhr.responseText);
-						this.setState({ list: value });
-					} else {
-						alert("Request was unsuccessful: " + xhr.status);
-					}
-				}
-			};
-			xhr.open('get', `http://localhost:8080/api/getStock?word=${this.state.value}`, true);
-			xhr.send(null);
-		}
-	}
-	handleChange(e) {
-		this.setState({ value: e.target.value })
-	}
-	handleClick(index) {
-		const symbol = this.state.list[index].symbol;
-		console.log(symbol);
-		function createXHR() {
-			if (typeof XMLHttpRequest != "undefined") {
-				return new XMLHttpRequest();
-			} else if (typeof ActiveXObject != "undefined") {
-				if (typeof arguments.callee.activeXString != "string") {
-					var versions = ["MSXML2.XMLHttp.6.0", "MSXML2.XMLHttp.3.0", "MSXML2.XMLHttp"], i, len;
-					for (i = 0, len = versions.length; i < len; i++) {
-						try {
-							new ActiveXObject(versions[i]);
-							arguments.callee.activeXString = versions[i];
-							break;
-						} catch (ex) {
-							//跳过
+					},
+					toolbox: {
+						feature: {
+							dataView: { show: true, readOnly: false },
+							magicType: { show: true, type: ['line', 'bar'] },
+							restore: { show: true },
+							saveAsImage: { show: true }
 						}
-					}
-				}
-				return new ActiveXObject(arguments.callee.activeXString);
-			} else {
-				throw new Error("No XHR object available.");
-			}
-		}
-		var xhr = createXHR();
-		xhr.onreadystatechange = () => {
-			if (xhr.readyState == 4) {
-
-				if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
-					const resDatas = JSON.parse(xhr.responseText);
-					const myChart = echarts.init(document.getElementById('chart'));
-					console.log(typeof resDatas.datas);
-					// 指定图表的配置项和数据
-					const option = {
-						xAxis: {
-							// type: 'datas',
-							data: resDatas.datas
+					},
+					legend: {
+						data: ['现金等价物', '有息负债', '单位（万元）']
+					},
+					xAxis: {
+						// type: 'datas',
+						data: resDatas.time
+					},
+					yAxis: [{
+						name : '单位（万元）'
+					}],
+					series: [{
+						name: '现金等价物',
+						data: resDatas.xjdjw,
+						type: 'line'
+					}, {
+						name: '有息负债',
+						data: resDatas.yxfz,
+						type: 'bar'
+					}]
+				};
+				// 存货营业收入
+				const option2 = {
+					color: ['#003366', '#4cabce'],
+					tooltip: {
+						trigger: 'axis',
+						axisPointer: {
+							type: 'shadow'
+						}
+					},
+					legend: {
+						data: ['存货', '营业收入']
+					},
+					yAxis: [{
+						name : '单位（万元）'
+					}],
+					xAxis: [
+						{
+							data: resDatas.time
+						}
+					],
+					series: [
+						{
+							name: '存货',
+							type: 'bar',
+							data: resDatas.ch
 						},
-						yAxis: {
-							// type: 'value'
+						{
+							name: '营业收入',
+							type: 'bar',
+							data: resDatas.yysr
 						},
-						series: [{
-							data: resDatas.fragment,
-							type: 'line'
-						}]
-					};
-					// 使用刚指定的配置项和数据显示图表。
-					myChart.setOption(option);
-				} else {
-					alert("Request was unsuccessful: " + xhr.status);
+					]
 				}
-			}
-		};
-		xhr.open('get', `http://localhost:8080/api/getCompany?word=${symbol}`, true);
-		xhr.send(null);
+				const option3 = {
 
+					tooltip : {
+						trigger: 'axis',
+						axisPointer: {
+							type: 'cross',
+							label: {
+								backgroundColor: '#6a7985'
+							}
+						}
+					},
+					legend: {
+						data:['净利润','应收款','预收款','预付款']
+					},
+					toolbox: {
+						feature: {
+							saveAsImage: {}
+						}
+					},
+					grid: {
+						left: '3%',
+						right: '4%',
+						bottom: '3%',
+						containLabel: true
+					},
+					xAxis : [
+						{
+							type : 'category',
+							boundaryGap : false,
+							data : resDatas.time
+						}
+					],
+					yAxis : [
+						{
+							name : '单位（万元）'
+						}
+					],
+					series : [
+						{
+							name:'净利润',
+							type:'line',
+							stack: '总量',
+							areaStyle: {},
+							data: resDatas.jlr
+						},
+						{
+							name:'应收款',
+							type:'line',
+							stack: '总量',
+							areaStyle: {},
+							data: resDatas.yingsk
+						},
+						{
+							name:'预收款',
+							type:'line',
+							stack: '总量',
+							areaStyle: {},
+							data: resDatas.ysk
+						},
+						{
+							name:'预付款',
+							type:'line',
+							stack: '总量',
+							areaStyle: {},
+							data: resDatas.yfk
+						},
+					]
+				};
+
+				this.myChart.setOption(option);
+				this.myChart2.setOption(option2);
+				this.myChart3.setOption(option3);
+			})
+			.catch((error) => {
+				// handle error
+				console.log(error);
+			})
+			.finally(() => {
+				// always executed
+			});
 	}
+
 	render() {
 		return (
-			<div>
+			<div className="wrap">
 				<input
+					className="searchInput"
 					value={this.state.value}
-					onBlur={() => this.handleBlur()}
-					onChange={(e) => this.handleChange(e)}
+					placeholder="请输入关键字"
+					style={{
+						display: "block",
+						width: "60%",
+						height: 50,
+						margin: "100px auto 50px auto",
+						textAlign: "center",
+						fontSize: 24,
+						color: "#777",
+						border: 0,
+						outline: "none",
+						borderBottom: "2px #eee solid"
+					}}
+					onChange={ (e) => this.handleChange(e) }
 				/>
-				<p>
+				<div className="btn-wrap">
 					{this.state.list.map((item, index) => {
 						return (
-							<button
-								key={index}
-								onClick={() => this.handleClick(index)}
-							>
-								{item.name}
-							</button>
+							<div key={index} className={this.state.index==index?"on":""}>
+								<span
+									onClick={() => this.handleClick(index)}
+								>
+									{item.name}
+								</span>
+							</div>
 						)
 					})}
-				</p>
-				<div id="chart" style={{width: 1000,height:400}}></div>
+				</div>
+				<div id="chart" style={{ width: 1000, height: 400 }}></div>
+				<div id="chart2" style={{ width: 1000, height: 400 }}></div>
+				<div id="chart3" style={{ width: 1000, height: 400 }}></div>
 			</div>
 		);
 	}
